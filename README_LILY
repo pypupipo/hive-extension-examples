@@ -1,0 +1,64 @@
+1. download jdk-1.7.0_79, and setup java path
+2. download hadoop-2.7.1, and setup hadoop path
+3. download hive-1.2.1, and setup hive path
+  for example, add below lines ~/.profile file
+    export HIVE_HOME=/root/hive
+    export HADOOP_HOME=/usr/local/hadoop
+    export PATH=$HIVE_HOME/bin:$PATH
+
+4. run hive, add jar, then create function and use
+#hive
+hive> ADD JAR /root/hive-extensions-1.0-SNAPSHOT.jar;
+hive> CREATE TEMPORARY FUNCTION helloworld as 'com.matthewrathbone.example.SimpleUDFExample';
+hive> select helloworld(name) from people limit 1000;
+    FAILED: SemanticException [Error 10001]: Line 1:29 Table not found 'people'
+hive> CREATE TABLE people (name string);
+    OK
+    Time taken: 0.873 seconds
+hive> insert into people values ('injung'), ('sergey');
+    Query ID = root_20150711040109_79180090-33bf-4243-9b15-2cabd536d948
+    Total jobs = 3
+    Launching Job 1 out of 3
+    Number of reduce tasks is set to 0 since there's no reduce operator
+    Job running in-process (local Hadoop)
+    2015-07-11 04:01:12,118 Stage-1 map = 100%,  reduce = 0%
+    Ended Job = job_local2084998127_0001
+    Stage-4 is selected by condition resolver.
+    Stage-3 is filtered out by condition resolver.
+    Stage-5 is filtered out by condition resolver.
+    Moving data to: file:/user/hive/warehouse/people/.hive-staging_hive_2015-07-11_04-01-09_223_687671019059826155-1/-ext-10000
+    Loading data to table default.people
+    Table default.people stats: [numFiles=1, numRows=2, totalSize=14, rawDataSize=12]
+    MapReduce Jobs Launched:
+    Stage-Stage-1:  HDFS Read: 0 HDFS Write: 0 SUCCESS
+    Total MapReduce CPU Time Spent: 0 msec
+    OK
+  Time taken: 3.119 seconds
+hive> select helloworld(name) from people limit 1000;
+  OK
+  Hello injung
+  Hello sergey
+  Time taken: 0.08 seconds, Fetched: 2 row(s)
+
+5. hive simple commands
+
+// to see the jar files that you've uploaded
+hive> list jars;
+
+// delete table
+hive> drop table people;
+
+// show functions that you've created
+hive> show functions;
+
+// show function works
+hive> describe function helloworld;
+
+
+
+/////////////////////////////
+// when I run the function on cloudera, I've got an error like below
+// Error while compiling statement: FAILED: SemanticException [Error 10014]: Line 1:7 Wrong arguments 'name': Unable to instantiate UDF implementation class com.matthewrathbone.example.SimpleUDFExample: java.lang.IllegalAccessException: Class org.apache.hadoop.hive.ql.udf.generic.GenericUDFBridge can not access a member of class com.matthewrathbone.example.SimpleUDFExample with modifiers ""
+// but when I run hive and try the example on the server, there is no error
+// guess the error was because of the some version conflict. 
+////////////////////////////////
